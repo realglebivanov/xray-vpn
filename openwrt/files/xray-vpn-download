@@ -1,0 +1,15 @@
+#!/bin/sh
+# Download xray-vpn binaries to /tmp if not already present.
+set -e
+
+VERSION="0.1.0"
+BASE_URL="https://github.com/realglebivanov/xray-vpn/releases/download/v${VERSION}"
+DEST="/tmp"
+
+for bin in xray-vpnd xray-vpn; do
+    if [ ! -x "${DEST}/${bin}" ]; then
+        echo "Downloading ${bin} ..."
+        wget -q -O "${DEST}/${bin}" "${BASE_URL}/${bin}-mipsle"
+        chmod 755 "${DEST}/${bin}"
+    fi
+done
