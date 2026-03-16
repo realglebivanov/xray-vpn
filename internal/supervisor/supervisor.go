@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"sync"
-	"time"
 
 	"github.com/realglebivanov/xray-vpn/internal/config"
 	"github.com/realglebivanov/xray-vpn/internal/routing"
@@ -12,21 +11,64 @@ import (
 	_ "github.com/xtls/xray-core/main/distro/all"
 )
 
-type Supervisor struct {
+type supervisor struct {
 	mu       sync.Mutex
 	instance *core.Instance
 	tun      *routing.Tunnel
 	running  bool
 }
 
-func (s *Supervisor) start() error {
+func (s *supervisor) start() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.startLocked()
+}
+
+func (s *supervisor) stop() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.stopLocked()
+}
+
+func (s *supervisor) refresh() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.running {
-		s.stopLocked()
+	if err := config.RefreshGeodata(); err != nil {
+		return fmt.Errorf("refresh geodata failed: %v", err)
+	}
+	if _, err := config.RefreshRuCIDRs(); err != nil {
+		return fmt.Errorf("refresh CIDRs failed: %v", err)
+	}
+	if !s.running {
+		log.Printf("data refreshed (not running, skipping restart)")
+		return nil
 	}
 
+	log.Println("data refreshed, restarting with new data ...")
+	return s.startLocked()
+}
+
+func (s *supervisor) startLocked() error {
+	if s.running {
+		if err := s.stopLocked(); err != nil {
+			return err
+		}
+	}
+
+	if err := s.startXRay(); err != nil {
+		return err
+	}
+	if err := s.setUpTunnel(); err != nil {
+		return err
+	}
+
+	s.running = true
+	log.Printf("tunnel set up: %v - %v", s.tun.Gw.IP, s.tun.TunAddr.IP)
+	return nil
+}
+
+func (s *supervisor) startXRay() error {
 	coreConfig, err := config.BuildCoreConfig()
 	if err != nil {
 		return fmt.Errorf("build xray-core config: %w", err)
@@ -42,61 +84,40 @@ func (s *Supervisor) start() error {
 	}
 	s.instance = instance
 
+	return nil
+}
+
+func (s *supervisor) setUpTunnel() error {
 	tun, err := routing.SetUpTunnel()
 	if err != nil {
-		s.stopLocked()
+		if sErr := s.stopLocked(); sErr != nil {
+			log.Println("stopLocked err: %w", err)
+		}
 		return fmt.Errorf("tunnel set up: %w", err)
 	}
 	s.tun = tun
 
-	log.Printf("tunnel set up: %s - %s", tun.Gw.IP.String(), tun.TunAddr.IP.String())
-
-	s.running = true
 	return nil
 }
 
-func (s *Supervisor) stop() {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.stopLocked()
-}
-
-func (s *Supervisor) refresh() {
-	if err := config.RefreshGeodata(); err != nil {
-		log.Printf("refresh geodata failed: %v", err)
-		return
-	}
-	if _, err := config.RefreshRuCIDRs(); err != nil {
-		log.Printf("refresh CIDRs failed: %v", err)
-		return
-	}
-	if !s.running {
-		log.Println("data refreshed (not running, skipping restart)")
-		return
-	}
-	log.Println("data refreshed, restarting with new data ...")
-	if err := s.start(); err != nil {
-		log.Printf("restart after refresh failed: %v", err)
-	}
-}
-
-func (s *Supervisor) stopLocked() {
-	if s.tun != nil {
-		routing.TearDownTunnel(s.tun)
-	}
-
+func (s *supervisor) stopLocked() error {
 	if s.instance != nil {
-		s.instance.Close()
+		if err := s.instance.Close(); err != nil {
+			return err
+		}
 		s.instance = nil
+		log.Println("stopped xray-core")
 	}
 
-	for range 20 {
-		if !routing.LinkExists(routing.TunDev) {
-			break
+	if s.tun != nil {
+		if err := routing.TearDownTunnel(s.tun); err != nil {
+			return err
 		}
-		time.Sleep(50 * time.Millisecond)
+		s.tun = nil
+		log.Println("tunnel is down")
 	}
 
 	s.running = false
-	log.Println("stopped xray-core")
+
+	return nil
 }

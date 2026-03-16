@@ -17,21 +17,15 @@ type Tunnel struct {
 }
 
 const (
-	TunDev  = "xray0"
-	TunMTU  = 1500
-	TunAddr = "198.18.0.1"
+	TunDev = "xray0"
+	TunMTU = 1500
 )
 
-func LinkExists(name string) bool {
-	_, err := netlink.LinkByName(name)
-	return err == nil
-}
-
-func TearDownTunnel(gw *Tunnel) error {
-	if err := cleanRouteTable(gw); err != nil {
+func TearDownTunnel(tun *Tunnel) error {
+	if err := cleanRouteTable(tun); err != nil {
 		return fmt.Errorf("clean table: %w", err)
 	}
-	if err := netlink.LinkDel(gw.TunLink); err != nil && !errors.Is(err, syscall.ENOENT) {
+	if err := netlink.LinkDel(tun.TunLink); err != nil && !errors.Is(err, syscall.ENOENT) {
 		return fmt.Errorf("delete link: %w", err)
 	}
 	return nil
@@ -76,7 +70,7 @@ func awaitTunLink(timeout time.Duration) (netlink.Link, error) {
 }
 
 func configureTun(link netlink.Link) (*netlink.Addr, error) {
-	addr, err := netlink.ParseAddr(fmt.Sprintf("%s/16", TunAddr))
+	addr, err := netlink.ParseAddr("198.18.0.1/16")
 	if err != nil {
 		return nil, err
 	}

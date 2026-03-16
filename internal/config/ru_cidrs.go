@@ -47,7 +47,7 @@ func RefreshRuCIDRs() ([]string, error) {
 
 func unmarshalCIDRs(data []byte) []string {
 	var cidrs []string
-	for _, line := range strings.Split(strings.TrimSpace(string(data)), "\n") {
+	for line := range strings.SplitSeq(strings.TrimSpace(string(data)), "\n") {
 		if line != "" {
 			cidrs = append(cidrs, line)
 		}

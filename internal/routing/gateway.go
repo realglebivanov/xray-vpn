@@ -11,7 +11,6 @@ type DefaultGateway struct {
 	Route netlink.Route
 	IP    net.IP
 	Link  netlink.Link
-	Iface string
 }
 
 func detectDefaultGateway() (*DefaultGateway, error) {
@@ -29,7 +28,7 @@ func detectDefaultGateway() (*DefaultGateway, error) {
 			continue
 		}
 
-		if link.Attrs().Alias == TunDev {
+		if link.Attrs().Name == TunDev {
 			continue
 		}
 
@@ -37,7 +36,6 @@ func detectDefaultGateway() (*DefaultGateway, error) {
 			Route: r,
 			IP:    r.Gw,
 			Link:  link,
-			Iface: link.Attrs().Name,
 		}, nil
 	}
 	return nil, fmt.Errorf("no default gateway found")
