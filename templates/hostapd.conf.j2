@@ -1,0 +1,29 @@
+interface=wlp4s0
+driver=nl80211
+
+ssid=TP-Link_0986
+
+# 5GHz band
+hw_mode=a
+channel=36
+
+# Enable 802.11n/ac/ax
+ieee80211n=1
+ieee80211ac=1
+ieee80211ax=1
+
+# WPA2/WPA3
+wpa=2
+wpa_key_mgmt=WPA-PSK
+rsn_pairwise=CCMP
+wpa_psk={{ host.data.wpa_psk }}
+
+# 40MHz channel width (conservative, should work)
+ht_capab=[HT40+][SHORT-GI-20][SHORT-GI-40]
+
+# 80MHz for VHT (802.11ac)
+vht_oper_chwidth=1
+vht_oper_centr_freq_seg0_idx=42
+
+# Basic config without advanced HE settings that might conflict
+country_code=RU
