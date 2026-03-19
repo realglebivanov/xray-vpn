@@ -78,6 +78,8 @@ func buildCoreConfig(
 		DNSConfig: &conf.DNSConfig{
 			Servers: []*conf.NameServerConfig{
 				{Address: &conf.Address{Address: net.ParseAddress("https+local://1.1.1.1/dns-query")}},
+				{Address: &conf.Address{Address: net.ParseAddress("https+local://8.8.8.8/dns-query")}},
+				{Address: &conf.Address{Address: net.ParseAddress("https+local://8.8.4.4/dns-query")}},
 			},
 			QueryStrategy: "UseIP",
 		},
@@ -85,17 +87,11 @@ func buildCoreConfig(
 }
 
 func buildRouterConfig(proxyTag string, ruCIDRs []string) *conf.RouterConfig {
-	localRule, _ := json.Marshal(map[string]any{
-		"type":        "field",
-		"inboundTag":  "socks-in",
-		"outboundTag": "local",
-		"ip":          []string{"geoip:private"},
-	})
 	directRule, _ := json.Marshal(map[string]any{
 		"type":        "field",
 		"inboundTag":  "socks-in",
 		"outboundTag": "direct",
-		"ip":          append(ruCIDRs, "geoip:ru"),
+		"ip":          append(ruCIDRs, "geoip:ru", "geoip:private"),
 	})
 	fileTransferRule, _ := json.Marshal(map[string]any{
 		"type":        "field",
@@ -118,7 +114,6 @@ func buildRouterConfig(proxyTag string, ruCIDRs []string) *conf.RouterConfig {
 
 	return &conf.RouterConfig{
 		RuleList: []json.RawMessage{
-			localRule,
 			directRule,
 			fileTransferRule,
 			dnsRule,
