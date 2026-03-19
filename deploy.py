@@ -15,7 +15,6 @@ apt.packages(name="Install deps", packages=["nftables", "dnsmasq", "hostapd"], p
 files.put(name="Upload xrayvpn .deb package", src=DEB_PATH, dest=REMOTE_DEB_PATH, mode="0644")
 server.shell(name="Install xrayvpn .deb package", commands=[f"dpkg -i {REMOTE_DEB_PATH}"], _env={"DEBIAN_FRONTEND": "noninteractive"})
 
-
 files.template(name="Deploy /etc/network/interfaces", src="templates/interfaces.j2", dest="/etc/network/interfaces", mode="0644", user="root", group="root")
 files.template(name="Deploy /etc/nftables.conf", src="templates/nftables.conf.j2", dest="/etc/nftables.conf", mode="0644", user="root", group="root")
 files.template(name="Deploy /etc/dnsmasq.conf", src="templates/dnsmasq.conf.j2", dest="/etc/dnsmasq.conf", mode="0644", user="root", group="root")
@@ -32,7 +31,15 @@ files.put(
     group="root",
 )
 
-server.shell(name="Add gleb to xrayvpn group", commands=["usermod -aG xrayvpn gleb"])
+server.user(
+    name="Configure gleb user with SSH key",
+    user="gleb",
+    groups=["xrayvpn"],
+    append=True,
+    public_keys=[
+        "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQChx5QLwUAa7LWQAFai5sGVFKVlFtSO8iEI/7Y3Vonbf/FGz14N6wk71VOK4k+aa9Pr30EMhAqK8mlPmLVIrWZgmxYmTqXNds81VbCWu0HZvql7FyBbCoLKg+HBt9vYiD1AYhLwMG7bMrc/5uXynFJuB+GkbxHNIvpREfe1445JX6xMksDvHnVkelkbbD20+xukOpK8jXBTPdxepsN6mGYb7M+KbK7PdjHawhnTgt/DDPVhyEvxBOcHJB6iNok1Q27OIFtsEjEEI0bSAvQKY3PPBYdbnYqF4PBHA6kYGnQyyMMYQ7jCqX80GyYbHjXBZ3B8SW1ge6L2Q034ZJvgUnObsgiomBU87KA9chG1Aob4yt8KE6sS69UltdoycsRIK5dASA4prHl6/yiG126Fz3EkMdSv5+xjpdLmHlwiXbirGiQ4XP83dbySIhdg7nxoif5oski+/+4pzsnZNCZuXhRN4Qx4jP6JVnCwaR0j0LPk4BEuYj2xxyJYHh2XL7N/Qn8= gleb@local",
+    ],
+)
 
 for svc in ["nftables", "dnsmasq", "hostapd", "xrayvpnd"]:
     systemd.service(name=f"Enable and start {svc}", service=svc, running=True, enabled=True, restarted=True, daemon_reload=True)
