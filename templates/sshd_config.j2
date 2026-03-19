@@ -1,0 +1,75 @@
+# Hardened sshd_config — hstd
+
+Include /etc/ssh/sshd_config.d/*.conf
+
+# --- Network ---
+Port 22
+ListenAddress 0.0.0.0
+# Drop IPv6 if you're not using it:
+# AddressFamily inet
+
+# --- Host keys: ed25519 only ---
+HostKey /etc/ssh/ssh_host_ed25519_key
+
+# --- Key exchange, ciphers, MACs ---
+KexAlgorithms sntrup761x25519-sha512@openssh.com,curve25519-sha256,curve25519-sha256@libssh.org
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com
+
+# --- Authentication ---
+LoginGraceTime 30
+MaxAuthTries 3
+MaxSessions 3
+
+PermitRootLogin no
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+
+PasswordAuthentication no
+PermitEmptyPasswords no
+KbdInteractiveAuthentication no
+ChallengeResponseAuthentication no
+
+KerberosAuthentication no
+GSSAPIAuthentication no
+
+# PAM: keep for account/session checks, auth is handled by pubkey
+UsePAM yes
+
+# --- Logging ---
+SyslogFacility AUTH
+LogLevel VERBOSE
+
+# --- Forwarding & tunneling: lock it down ---
+AllowAgentForwarding no
+AllowTcpForwarding no
+GatewayPorts no
+X11Forwarding no
+PermitTunnel no
+DisableForwarding yes
+
+# --- Session ---
+PermitTTY yes
+PermitUserEnvironment no
+PrintMotd no
+PrintLastLog yes
+StrictModes yes
+
+# --- Idle / keepalive ---
+ClientAliveInterval 300
+ClientAliveCountMax 2
+TCPKeepAlive no
+
+# --- Brute-force mitigation ---
+# start dropping at 3 unauthenticated, 50% drop at 5, hard cap at 10
+MaxStartups 3:50:10
+
+# --- Misc ---
+UseDNS no
+Compression no
+VersionAddendum none
+Banner none
+
+# --- Env & subsystems ---
+AcceptEnv LANG LC_* COLORTERM NO_COLOR
+Subsystem sftp /usr/lib/openssh/sftp-server
