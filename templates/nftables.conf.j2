@@ -8,27 +8,27 @@ table inet filter {
         
         # Allow loopback
         iifname "lo" counter accept
-        
+
         # Allow established/related connections
         ct state established,related counter accept
-        
+
         # Allow ICMP (ping)
         ip protocol icmp counter accept
         ip6 nexthdr icmpv6 counter accept
 
         # Navidrome
-        iifname "eno1" tcp dport 4533 counter accept
-        iifname "wlp4s0" tcp dport 4533 counter accept
-        
-        # Allow SSH from LAN only
-        iifname "wlp4s0" tcp dport 22 counter accept
-        
-        # Allow DHCP from LAN (if running DHCP server)
-        iifname "wlp4s0" udp dport 67 counter accept
-        
-        # Allow DNS from LAN (if running DNS server)
-        iifname "wlp4s0" udp dport 53 counter accept
-        iifname "wlp4s0" tcp dport 53 counter accept
+        iifname "{{ host.data.wan_dev }}" tcp dport 4533 counter accept
+        iifname "{{ host.data.apd_dev }}" tcp dport 4533 counter accept
+
+        # Allow SSH from APD only
+        iifname "{{ host.data.apd_dev }}" tcp dport 22 counter accept
+
+        # Allow DHCP from APD (if running DHCP server)
+        iifname "{{ host.data.apd_dev }}" udp dport 67 counter accept
+
+        # Allow DNS from APD (if running DNS server)
+        iifname "{{ host.data.apd_dev }}" udp dport 53 counter accept
+        iifname "{{ host.data.apd_dev }}" tcp dport 53 counter accept
         
         # Log and drop everything else
         counter log prefix "INPUT DROP: " drop
@@ -45,8 +45,8 @@ table inet filter {
         # Allow established/related
         ct state established,related counter accept
         
-        # Allow LAN to WAN
-        iifname "wlp4s0" oifname "eno1" counter accept
+        # Allow APD to WAN
+        iifname "{{ host.data.apd_dev }}" oifname "{{ host.data.wan_dev }}" counter accept
 
         # Log and drop everything else
         counter log prefix "FORWARD DROP: " drop
@@ -61,6 +61,6 @@ table inet filter {
 table inet nat {
     chain postrouting {
         type nat hook postrouting priority 100; policy accept;
-        oifname "eno1" counter masquerade
+        oifname "{{ host.data.wan_dev }}" counter masquerade
     }
 }
