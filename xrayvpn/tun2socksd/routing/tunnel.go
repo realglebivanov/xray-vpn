@@ -18,7 +18,7 @@ type Tunnel struct {
 
 var (
 	TunDev = hstdlib.EnvOr("TUN_DEV", "xray0")
-	LanDev = hstdlib.EnvOr("LAN_DEV", "wlp4s0")
+	ApdDev = hstdlib.EnvOr("APD_DEV", "wlp4s0")
 	WanDev = hstdlib.EnvOr("WAN_DEV", "eno1")
 	TunMTU = hstdlib.EnvOrInt("TUN_MTU", 1500)
 )

@@ -38,9 +38,9 @@ func allowForwardToTun() error {
 	conn.AddTable(fw4Table)
 	conn.AddChain(forwardChain)
 	conn.AddRule(buildForwardRule("lo", TunDev))
-	conn.AddRule(buildForwardRule(LanDev, TunDev))
+	conn.AddRule(buildForwardRule(ApdDev, TunDev))
 	conn.AddRule(buildForwardRule(TunDev, WanDev))
-	conn.AddRule(buildForwardRule(TunDev, LanDev))
+	conn.AddRule(buildForwardRule(TunDev, ApdDev))
 
 	if err := conn.Flush(); err != nil {
 		return fmt.Errorf("nft insert forward rule: %w", err)
