@@ -1,3 +1,3 @@
 #!/bin/bash
-[ "$IFACE" = "eno1" ] || exit 0
+[ "$IFACE" = "{{ host.data.wan_dev }}" ] || exit 0
 systemctl stop --no-block xrayvpnd.service
