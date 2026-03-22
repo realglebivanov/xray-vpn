@@ -23,6 +23,23 @@ notify("dnsmasq", files.template(
         dest="/etc/dnsmasq.conf",
         mode="0644", user="root", group="root"))
 
+notify("transmission-daemon", files.put(
+        name="Deploy /etc/transmission-daemon/settings.json",
+        src="templates/transmission-settings.json",
+        dest="/etc/transmission-daemon/settings.defaults.json",
+        mode="0644", user="root", group="root"))
+
+notify("transmission-daemon", files.directory(
+        name="Create transmission-daemon.service.d",
+        path="/etc/systemd/system/transmission-daemon.service.d",
+        mode="0755", user="root", group="root"))
+
+notify("transmission-daemon", files.put(
+        name="Deploy transmission-daemon override.conf",
+        src="templates/transmission-daemon-override.conf",
+        dest="/etc/systemd/system/transmission-daemon.service.d/override.conf",
+        mode="0644", user="root", group="root"))
+
 notify("hostapd", files.template(
     name="Deploy /etc/hostapd/hostapd.conf",
     src="templates/hostapd.conf.j2",
@@ -44,6 +61,32 @@ notify("navidrome", files.template(
 for d in ["/srv/navidrome/music", "/srv/navidrome/data", "/srv/navidrome/cache"]:
     notify("navidrome", files.directory(
         name=f"Create {d}", path=d, mode="0755", user="navidrome", group="navidrome"))
+
+notify("transmission-daemon", files.directory(
+    name="Create /srv/transmission",
+    path="/srv/transmission",
+    mode="0755", user="root", group="root"))
+
+notify("transmission-daemon", files.directory(
+    name="Create /srv/transmission/downloads",
+    path="/srv/transmission/downloads",
+    mode="0755", user="debian-transmission", group="debian-transmission"))
+
+notify("transmission-daemon", files.directory(
+    name="Create /srv/transmission/downloads/music",
+    path="/srv/transmission/downloads/music",
+    mode="2755", user="debian-transmission", group="navidrome"))
+
+notify("transmission-daemon", files.directory(
+    name="Create /srv/transmission/incomplete",
+    path="/srv/transmission/incomplete",
+    mode="0750", user="debian-transmission", group="debian-transmission"))
+
+notify("navidrome", files.link(
+    name="Link Transmission music into Navidrome library",
+    path="/srv/navidrome/music/Transmission",
+    target="/srv/transmission/downloads/music",
+    user="navidrome", group="navidrome"))
 
 notify("networkd-dispatcher", files.template(
     name="Deploy networkd-dispatcher routable.d script",

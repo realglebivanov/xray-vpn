@@ -29,7 +29,7 @@ var (
 	}
 )
 
-func allowForwardToTun() error {
+func setUpNftables() error {
 	conn, err := nftables.New()
 	if err != nil {
 		return fmt.Errorf("nftables conn: %w", err)
@@ -50,7 +50,7 @@ func allowForwardToTun() error {
 	return nil
 }
 
-func removeForwardToTun() error {
+func tearDownNftables() error {
 	conn, err := nftables.New()
 	if err != nil {
 		return fmt.Errorf("nftables conn: %w", err)

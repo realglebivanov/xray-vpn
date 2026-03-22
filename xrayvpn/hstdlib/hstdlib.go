@@ -3,6 +3,7 @@ package hstdlib
 import (
 	"fmt"
 	"os"
+	"os/user"
 	"strconv"
 
 	"golang.org/x/sys/unix"
@@ -11,11 +12,26 @@ import (
 var (
 	SocksHost        = EnvOr("SOCKS_HOST", "127.0.0.1")
 	SocksPort        = EnvOrUint32("SOCKS_PORT", 1080)
+	TransmissionUser = EnvOr("TRANSMISSION_USER", "debian-transmission")
 	XrayVpnPIDFile   = "/run/xrayvpn/xrayvpnd.pid"
 	Tun2SocksPIDFile = "/run/xrayvpn/tun2socksd.pid"
 	XrayOutMark      = EnvOrUint32("XRAY_OUT_MARK", 0x1f)
 	XrayTrafficMark  = EnvOrUint32("XRAY_TRAFFIC_MARK", 0x1337)
 )
+
+func TransmissionUID() (uint32, error) {
+	u, err := user.Lookup(TransmissionUser)
+	if err != nil {
+		return 0, fmt.Errorf("lookup %q: %w", TransmissionUser, err)
+	}
+
+	uid, err := strconv.ParseUint(u.Uid, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("parse %q uid %q: %w", TransmissionUser, u.Uid, err)
+	}
+
+	return uint32(uid), nil
+}
 
 func CheckCap(cap int) error {
 	hdr := unix.CapUserHeader{Version: unix.LINUX_CAPABILITY_VERSION_3}

@@ -1,0 +1,18 @@
+{
+  "download-dir": "/srv/transmission/downloads",
+  "incomplete-dir": "/srv/transmission/incomplete",
+  "incomplete-dir-enabled": true,
+  "peer-port": 51413,
+  "peer-port-random-on-start": false,
+  "rename-partial-files": true,
+  "rpc-authentication-required": false,
+  "rpc-bind-address": "0.0.0.0",
+  "rpc-enabled": true,
+  "rpc-host-whitelist-enabled": false,
+  "rpc-port": 9091,
+  "rpc-url": "/",
+  "rpc-whitelist": "127.0.0.1,192.168.2.*",
+  "rpc-whitelist-enabled": true,
+  "start-added-torrents": true,
+  "trash-original-torrent-files": false
+}
