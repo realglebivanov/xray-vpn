@@ -15,6 +15,7 @@ for pkg in [
     "nftables",
     "dnsmasq",
     "hostapd",
+    "transmission-daemon",
     "ffmpeg",
     "curl",
     "rsync",

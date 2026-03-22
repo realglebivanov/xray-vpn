@@ -20,6 +20,13 @@ table inet filter {
         iifname "{{ host.data.wan_dev }}" tcp dport 4533 counter accept
         iifname "{{ host.data.apd_dev }}" tcp dport 4533 counter accept
 
+        # Transmission web UI from APD only
+        iifname "{{ host.data.apd_dev }}" tcp dport 9091 counter accept
+
+        # Transmission peer port from WAN
+        iifname "{{ host.data.wan_dev }}" tcp dport 51413 counter accept
+        iifname "{{ host.data.wan_dev }}" udp dport 51413 counter accept
+
         # Allow SSH from APD only
         iifname "{{ host.data.apd_dev }}" tcp dport 22 counter accept
 

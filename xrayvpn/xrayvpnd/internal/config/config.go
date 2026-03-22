@@ -60,11 +60,6 @@ func buildCoreConfig(
 		OutboundConfigs: []conf.OutboundDetourConfig{
 			{
 				Protocol: "freedom",
-				Tag:      "local",
-				Settings: freedomSettings,
-			},
-			{
-				Protocol: "freedom",
 				Tag:      "direct",
 				Settings: freedomSettings,
 				StreamSetting: &conf.StreamConfig{
@@ -93,12 +88,6 @@ func buildRouterConfig(proxyTag string, ruCIDRs []string) *conf.RouterConfig {
 		"outboundTag": "direct",
 		"ip":          append(ruCIDRs, "geoip:ru", "geoip:private"),
 	})
-	fileTransferRule, _ := json.Marshal(map[string]any{
-		"type":        "field",
-		"inboundTag":  "socks-in",
-		"outboundTag": "direct",
-		"protocol":    []string{"bittorrent", "ftp"},
-	})
 	dnsRule, _ := json.Marshal(map[string]any{
 		"type":        "field",
 		"outboundTag": "direct",
@@ -115,7 +104,6 @@ func buildRouterConfig(proxyTag string, ruCIDRs []string) *conf.RouterConfig {
 	return &conf.RouterConfig{
 		RuleList: []json.RawMessage{
 			directRule,
-			fileTransferRule,
 			dnsRule,
 			proxyRule,
 		},

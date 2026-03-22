@@ -24,16 +24,37 @@ var (
 )
 
 func TearDownTunnel(tun *Tunnel) error {
-	if err := removeForwardToTun(); err != nil {
-		return fmt.Errorf("firewall: %w", err)
+	if err := tearDownNftables(); err != nil {
+		return fmt.Errorf("tear down nftables: %w", err)
 	}
-	if err := cleanRouteTable(tun); err != nil {
-		return fmt.Errorf("clean table: %w", err)
+	if err := tearDownRoutes(tun); err != nil {
+		return fmt.Errorf("tear down route table: %w", err)
+	}
+	if err := tearDownRules(); err != nil {
+		return fmt.Errorf("clean tear down route rules: %w", err)
 	}
 	return nil
 }
 
 func SetUpTunnel() (*Tunnel, error) {
+	tunnel, err := setUpLink()
+	if err != nil {
+		return tunnel, err
+	}
+
+	if err := setUpRules(); err != nil {
+		return tunnel, fmt.Errorf("set up route rules: %w", err)
+	}
+	if err := setUpRoutes(tunnel); err != nil {
+		return tunnel, fmt.Errorf("set up route table: %w", err)
+	}
+	if err := setUpNftables(); err != nil {
+		return tunnel, fmt.Errorf("set up nftables: %w", err)
+	}
+	return tunnel, nil
+}
+
+func setUpLink() (*Tunnel, error) {
 	gw, err := preserveDefaultGateway()
 	if err != nil {
 		return nil, err
@@ -48,15 +69,8 @@ func SetUpTunnel() (*Tunnel, error) {
 	if err != nil {
 		return nil, err
 	}
-	tunnel := Tunnel{Gw: gw, TunLink: tunLink, TunAddr: tunAddr}
 
-	if err := populateRouteTable(&tunnel); err != nil {
-		return &tunnel, fmt.Errorf("populate table: %w", err)
-	}
-	if err := allowForwardToTun(); err != nil {
-		return &tunnel, fmt.Errorf("firewall: %w", err)
-	}
-	return &tunnel, nil
+	return &Tunnel{Gw: gw, TunLink: tunLink, TunAddr: tunAddr}, nil
 }
 
 func awaitTunLink(timeout time.Duration) (netlink.Link, error) {
