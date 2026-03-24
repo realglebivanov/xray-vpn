@@ -31,13 +31,13 @@ func main() {
 	subPath := hstdlib.MustEnv("SUB_PATH")
 	secret := hstdlib.MustEnvUint64("SECRET")
 	xrayConfigs := []*xrayConfig{{
-		remark:     "Direct",
+		remark:     "Обычный ВПН",
 		host:       hstdlib.MustEnv("SERVER_HOST"),
 		realityPbk: hstdlib.MustEnv("REALITY_PBK"),
 		realitySni: hstdlib.MustEnv("REALITY_SNI"),
 		realitySid: hstdlib.MustEnv("REALITY_SID"),
 	}, {
-		remark:     "Proxy",
+		remark:     "Обход белых списков",
 		host:       hstdlib.MustEnv("PROXY_HOST"),
 		realityPbk: hstdlib.MustEnv("REALITY_PBK"),
 		realitySni: hstdlib.MustEnv("REALITY_SNI"),
