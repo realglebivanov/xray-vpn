@@ -6,7 +6,7 @@ from os import path
 local.include(filename=path.join("tasks", "xray_server", "packages.py"))
 local.include(filename=path.join("tasks", "xray_server", "configs.py"))
 
-for svc in ["nftables", "nginx", "xray", "ssh"]:
+for svc in ["nftables", "nginx", "xray", "ssh", "clientrotate"]:
     systemd.service(
         name=f"Enable and start {svc}",
         service=svc, running=True, enabled=True,

@@ -1,10 +1,10 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
+	"syscall"
 
 	"github.com/realglebivanov/hstd/hstdlib"
 	"github.com/realglebivanov/hstd/xrayvpnd/internal/config/store"
@@ -21,21 +21,17 @@ func newInitCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("secret must be an integer: %w", err)
 			}
-			uuid := hstdlib.GenerateClientUUID(secret)
 
+			uuid := hstdlib.GenerateClientUUID(secret)
 			serverLink := buildVLESSLink(uuid, args[1], args[3], args[4], args[5])
 			proxyLink := buildVLESSLink(uuid, args[2], args[3], args[4], args[5])
 
-			initErr := store.InitLinks(serverLink, proxyLink)
-			if errors.Is(initErr, store.ErrAlreadyInitialized) {
-				fmt.Println("links already initialized, skipping")
-				return nil
+			if err := store.ReplaceDefaultLinks(serverLink, proxyLink); err != nil {
+				return err
 			}
-			if initErr != nil {
-				return initErr
-			}
+
 			fmt.Println("links initialized (server active)")
-			return nil
+			return send(xrayvpndProcess, syscall.SIGUSR2)
 		},
 	}
 	return cmd
