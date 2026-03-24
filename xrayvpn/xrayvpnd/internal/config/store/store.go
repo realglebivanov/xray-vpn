@@ -8,10 +8,7 @@ import (
 	"sync"
 )
 
-var (
-	mu                     sync.Mutex
-	ErrAlreadyInitialized = errors.New("links already initialized")
-)
+var mu sync.Mutex
 
 const statePath = "/etc/xrayvpn/state.json"
 
@@ -70,7 +67,7 @@ func ChooseLink(id string) error {
 	return saveState(st)
 }
 
-func InitLinks(serverLink, proxyLink string) error {
+func ReplaceDefaultLinks(serverLink, proxyLink string) error {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -78,16 +75,10 @@ func InitLinks(serverLink, proxyLink string) error {
 	if err != nil {
 		return err
 	}
-	if len(st.Links) > 0 {
-		return ErrAlreadyInitialized
+	if err := st.replaceDefaultLinks(serverLink, proxyLink); err != nil {
+		return fmt.Errorf("init links: %w", err)
 	}
 
-	if err := st.addLink(proxyLink, true); err != nil {
-		return fmt.Errorf("add proxy link: %w", err)
-	}
-	if err := st.addLink(serverLink, true); err != nil {
-		return fmt.Errorf("add server link: %w", err)
-	}
 	return saveState(st)
 }
 

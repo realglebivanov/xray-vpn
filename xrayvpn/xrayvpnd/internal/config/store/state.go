@@ -14,6 +14,19 @@ type State struct {
 	ActiveID string `json:"active_id"`
 }
 
+func (s *State) replaceDefaultLinks(serverLink, proxyLink string) error {
+	for _, link := range s.Links {
+		if !link.Rotate {
+			continue
+		}
+		if _, err := s.removeLink(link.ID); err != nil {
+			return err
+		}
+	}
+
+	return errors.Join(s.addLink(proxyLink, true), s.addLink(serverLink, true))
+}
+
 func (s *State) addLink(link string, rotate bool) error {
 	link = strings.TrimSpace(link)
 
