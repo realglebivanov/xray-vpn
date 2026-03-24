@@ -1,4 +1,4 @@
-from pyinfra.operations import python, systemd
+from pyinfra.operations import python, server, systemd
 from pyinfra import host, local
 from deploy.triggers import changed
 from os import path
@@ -12,6 +12,20 @@ for svc in ["nftables", "nginx", "ssh", "subsrv"]:
         service=svc, running=True, enabled=True,
         restarted=changed(svc), daemon_reload=changed(svc))
 
+server.shell(
+    name="Obtain Let's Encrypt certificate",
+    commands=[
+        "certbot certonly --webroot -w /var/www/html"
+        f" -d {host.data.proxy_domain}"
+        " --non-interactive --agree-tos -m realglebivanov@gmail.com"
+        " --keep-until-expiring"
+        " --deploy-hook 'systemctl restart subsrv'",
+    ])
+
+systemd.service(
+    name="Enable certbot renewal timer",
+    service="certbot.timer", running=True, enabled=True)
+
 python.call(
     name="Subscription URL",
-    function=lambda: print(f"\n  http://{host.name}:8080/{host.data.sub_path}\n"))
+    function=lambda: print(f"\n  https://{host.data.proxy_domain}:8080/{host.data.sub_path}\n"))

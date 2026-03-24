@@ -1,6 +1,11 @@
 from pyinfra.operations import files, server
 from deploy.triggers import notify
 
+files.directory(
+    name="Ensure /var/www/html exists",
+    path="/var/www/html",
+    present=True, mode="0755", user="www-data", group="www-data")
+
 notify("nftables", files.template(
     name="Deploy /etc/nftables.conf",
     src="templates/xray_proxy/nftables.conf.j2",

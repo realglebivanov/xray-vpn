@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 
 	"github.com/realglebivanov/hstd/hstdlib"
 	"github.com/xtls/xray-core/common/net"
@@ -59,8 +60,11 @@ func main() {
 		}
 	})
 
+	credsDir := hstdlib.MustEnv("CREDENTIALS_DIRECTORY")
+	certFile := filepath.Join(credsDir, "tls_cert")
+	keyFile := filepath.Join(credsDir, "tls_key")
 	log.Println("listening on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServeTLS(":8080", certFile, keyFile, nil))
 }
 
 func buildNamedConfigs(secret uint64, xrayConfigs []*xrayConfig) ([]namedConfig, error) {

@@ -9,6 +9,8 @@ ExecStart=/usr/local/bin/subsrv
 Restart=on-failure
 RestartSec=5s
 DynamicUser=yes
+LoadCredential=tls_cert:/etc/letsencrypt/live/{{ host.data.proxy_domain }}/fullchain.pem
+LoadCredential=tls_key:/etc/letsencrypt/live/{{ host.data.proxy_domain }}/privkey.pem
 Environment=SECRET={{ host.data.rotate_secret }}
 Environment=PROXY_HOST={{ host.name }}
 Environment=SERVER_HOST={{ host.data.xray_server_addr }}
