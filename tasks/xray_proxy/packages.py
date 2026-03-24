@@ -14,6 +14,7 @@ for pkg in [
     "nginx",
     "libnginx-mod-stream",
     "curl",
+    "certbot",
 ]: notify(pkg, apt.packages(
     name=f"Install {pkg}", packages=[pkg], present=True, _env=_APT_ENV))
 

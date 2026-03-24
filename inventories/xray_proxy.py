@@ -11,5 +11,6 @@ hosts = [
         "reality_sni": xray.reality_sni,
         "reality_sid": xray.reality_sid,
         "sub_path": passwd.sub_path,
+        "proxy_domain": "x.hstd.space",
     }),
 ]
