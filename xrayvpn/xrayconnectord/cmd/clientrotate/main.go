@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 
 	"github.com/realglebivanov/hstd/hstdlib"
+	"github.com/realglebivanov/hstd/hstdlib/secret"
 	"github.com/xtls/xray-core/infra/conf"
 	"github.com/xtls/xray-core/proxy/vless"
 )
@@ -17,21 +17,21 @@ func main() {
 		log.Fatal("usage: clientrotate <secret>")
 	}
 
-	secret, err := strconv.ParseUint(os.Args[1], 10, 64)
+	scrt, err := hstdlib.ParseHexSecret(os.Args[1])
 	if err != nil {
-		log.Fatalf("secret must be an integer: %v", err)
+		log.Fatalf("secret must be hex: %v", err)
 	}
-	uuid := hstdlib.GenerateClientUUID(secret)
-	log.Printf("rotating client_id to %s", uuid)
+	uuids := secret.GenerateClientUUIDs(scrt)
+	log.Printf("rotating client_id: %d clients", len(uuids))
 
-	if err := rotate(uuid); err != nil {
+	if err := rotate(uuids); err != nil {
 		log.Fatalf("rotate: %v", err)
 	}
 }
 
 const configPath = "/usr/local/etc/xray/config.json"
 
-func rotate(uuid string) error {
+func rotate(uuids []string) error {
 	fi, err := os.Stat(configPath)
 	if err != nil {
 		return fmt.Errorf("stat config: %w", err)
@@ -47,7 +47,7 @@ func rotate(uuid string) error {
 		return fmt.Errorf("parse config: %w", err)
 	}
 
-	if err := updateInbounds(&cfg, uuid); err != nil {
+	if err := updateInbounds(&cfg, uuids); err != nil {
 		return fmt.Errorf("update inbounds: %v", err)
 	}
 
@@ -65,7 +65,7 @@ func rotate(uuid string) error {
 	return nil
 }
 
-func updateInbounds(cfg *conf.Config, uuid string) error {
+func updateInbounds(cfg *conf.Config, uuids []string) error {
 	for i, inbound := range cfg.InboundConfigs {
 		if inbound.Protocol != "vless" {
 			continue
@@ -79,11 +79,11 @@ func updateInbounds(cfg *conf.Config, uuid string) error {
 			return fmt.Errorf("parse vless settings: %w", err)
 		}
 
-		client, err := json.Marshal(&vless.Account{Id: uuid, Flow: "xtls-rprx-vision", Encryption: ""})
+		clients, err := buildClients(uuids)
 		if err != nil {
 			return fmt.Errorf("marshal client: %w", err)
 		}
-		settings.Clients = []json.RawMessage{client}
+		settings.Clients = clients
 
 		raw, err := json.Marshal(settings)
 		if err != nil {
@@ -94,4 +94,18 @@ func updateInbounds(cfg *conf.Config, uuid string) error {
 	}
 
 	return nil
+}
+
+func buildClients(uuids []string) ([]json.RawMessage, error) {
+	var clients []json.RawMessage
+
+	for _, uuid := range uuids {
+		json, err := json.Marshal(&vless.Account{Id: uuid, Flow: "xtls-rprx-vision", Encryption: ""})
+		if err != nil {
+			return nil, fmt.Errorf("marshal client: %w", err)
+		}
+		clients = append(clients, json)
+	}
+
+	return clients, nil
 }

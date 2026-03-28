@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"net/url"
-	"strconv"
 	"syscall"
 
 	"github.com/realglebivanov/hstd/hstdlib"
+	"github.com/realglebivanov/hstd/hstdlib/secret"
 	"github.com/realglebivanov/hstd/xrayvpnd/internal/config/store"
 	"github.com/spf13/cobra"
 )
@@ -17,12 +17,12 @@ func newInitCmd() *cobra.Command {
 		Short: "Initialize managed links if state is empty",
 		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			secret, err := strconv.ParseUint(args[0], 10, 64)
+			rootSecret, err := hstdlib.ParseHexSecret(args[0])
 			if err != nil {
-				return fmt.Errorf("secret must be an integer: %w", err)
+				return fmt.Errorf("secret must be hex: %w", err)
 			}
 
-			uuid := hstdlib.GenerateClientUUID(secret)
+			uuid := secret.GenerateClientUUID(0, rootSecret)
 			serverLink := buildVLESSLink(uuid, args[1], args[3], args[4], args[5])
 			proxyLink := buildVLESSLink(uuid, args[2], args[3], args[4], args[5])
 

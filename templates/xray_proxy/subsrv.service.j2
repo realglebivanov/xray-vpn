@@ -9,6 +9,7 @@ ExecStart=/usr/local/bin/subsrv
 Restart=on-failure
 RestartSec=5s
 DynamicUser=yes
+StateDirectory=subsrv
 LoadCredential=tls_cert:/etc/letsencrypt/live/{{ host.data.proxy_domain }}/fullchain.pem
 LoadCredential=tls_key:/etc/letsencrypt/live/{{ host.data.proxy_domain }}/privkey.pem
 Environment=SECRET={{ host.data.rotate_secret }}
@@ -18,6 +19,7 @@ Environment=REALITY_PBK={{ host.data.reality_pbk }}
 Environment=REALITY_SNI={{ host.data.reality_sni }}
 Environment=REALITY_SID={{ host.data.reality_sid }}
 Environment=SUB_PATH={{ host.data.sub_path }}
+Environment=ADMIN_CIDR={{ host.data.admin_cidr }}
 
 [Install]
 WantedBy=multi-user.target
