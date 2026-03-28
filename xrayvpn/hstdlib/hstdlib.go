@@ -1,15 +1,13 @@
 package hstdlib
 
 import (
-	"crypto/sha256"
-	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/user"
 	"strconv"
-	"time"
 
 	"golang.org/x/sys/unix"
 )
@@ -19,6 +17,7 @@ var (
 	SocksPort = EnvOrUint32("SOCKS_PORT", 1080)
 	ApdCIDR   = EnvOr("APD_CIDR", "")
 
+	XrayClientCount  = 100
 	XrayOutMark      = EnvOrUint32("XRAY_OUT_MARK", 0x1f)
 	XrayTrafficMark  = EnvOrUint32("XRAY_TRAFFIC_MARK", 0x1337)
 	DirectRouteTable = 100
@@ -108,13 +107,13 @@ func EnvOrUint32(key string, fallback uint32) uint32 {
 	return uint32(n)
 }
 
-func MustEnvUint64(key string) uint64 {
+func MustEnvHex(key string) []byte {
 	v := MustEnv(key)
-	n, err := strconv.ParseUint(v, 10, 64)
+	b, err := hex.DecodeString(v)
 	if err != nil {
-		log.Fatalf("env var %s must be an integer: %v", key, err)
+		log.Fatalf("env var %s must be hex: %v", key, err)
 	}
-	return n
+	return b
 }
 
 func MustEnv(key string) string {
@@ -125,11 +124,6 @@ func MustEnv(key string) string {
 	return v
 }
 
-func GenerateClientUUID(secret uint64) string {
-	now := time.Now().UTC()
-	epoch := now.Add(-3 * time.Hour) // align day boundary with 03:00 UTC rotation schedule
-	day := time.Date(epoch.Year(), epoch.Month(), epoch.Day(), 0, 0, 0, 0, time.UTC).Unix()
-	h := sha256.Sum256(binary.BigEndian.AppendUint64(nil, uint64(day)+secret))
-	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
-		h[0:4], h[4:6], h[6:8], h[8:10], h[10:16])
+func ParseHexSecret(s string) ([]byte, error) {
+	return hex.DecodeString(s)
 }
