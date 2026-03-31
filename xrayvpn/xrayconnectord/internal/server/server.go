@@ -1,10 +1,10 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -14,7 +14,6 @@ import (
 	"github.com/realglebivanov/hstd/xrayconnectord/internal/db"
 	"github.com/realglebivanov/hstd/xrayconnectord/internal/server/admin/view"
 	"github.com/realglebivanov/hstd/xrayconnectord/internal/server/broadcast"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type auth struct {
@@ -32,6 +31,7 @@ type Server struct {
 	auth          *auth
 	view          *view.Builder
 	serverConfigs []*client.ServerConfig
+	httpServer    *http.Server
 }
 
 func New(rootSecret []byte) (*Server, error) {
@@ -76,45 +76,31 @@ func New(rootSecret []byte) (*Server, error) {
 		}}}, nil
 }
 
-func (s *Server) Start() {
-	http.HandleFunc("GET /admin/ws", s.handleAdminWS)
-	http.HandleFunc("GET /admin/", s.handleAdminPage)
-	http.HandleFunc("/", s.handleSubReq)
+func (s *Server) Start() error {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /admin/ws", s.handleAdminWS)
+	mux.HandleFunc("GET /admin/", s.handleAdminPage)
+	mux.HandleFunc("GET /{link}", s.handleSubReq)
 
 	credsDir := hstdlib.MustEnv("CREDENTIALS_DIRECTORY")
-	certFile := filepath.Join(credsDir, "tls_cert")
-	keyFile := filepath.Join(credsDir, "tls_key")
+	s.httpServer = &http.Server{Addr: ":8080", Handler: mux}
 
 	slog.Info("listening on :8080")
-	if err := http.ListenAndServeTLS(":8080", certFile, keyFile, nil); err != nil {
-		slog.Error("listen", "err", err)
-		os.Exit(1)
-	}
-}
-
-func (s *Server) basicAuth(w http.ResponseWriter, r *http.Request) bool {
-	sesh, _ := s.auth.sessions.Get(r, "hstd#xrayconnectord#subsrv")
-
-	if _, ok := sesh.Values["id"]; ok {
-		return true
-	}
-
-	user, pass, ok := r.BasicAuth()
-	if !ok || user != s.auth.adminUser {
-		return false
-	}
-
-	if bcrypt.CompareHashAndPassword([]byte(s.auth.adminPasswordHash), []byte(pass)) != nil {
-		return false
-	}
-
-	sesh.Options = s.auth.sessionOpts
-	sesh.Values["id"] = true
-
-	return sesh.Save(r, w) == nil
+	return s.httpServer.ListenAndServeTLS(
+		filepath.Join(credsDir, "tls_cert"),
+		filepath.Join(credsDir, "tls_key"),
+	)
 }
 
 func (s *Server) Stop() {
+	s.broadcast.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := s.httpServer.Shutdown(ctx); err != nil {
+		slog.Error("http shutdown", "err", err)
+	}
+
 	if err := s.db.Close(); err != nil {
 		slog.Error("close db", "err", err)
 	}

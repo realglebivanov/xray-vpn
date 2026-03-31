@@ -80,7 +80,7 @@ func (s *Server) validateSubInput(r *http.Request) (*link.Link, *httpError) {
 }
 
 func (s *Server) buildSubLink(r *http.Request) (*link.Link, *httpError) {
-	src := r.URL.Path[1:]
+	src := r.PathValue("link")
 
 	if src == s.legacySubPath {
 		return link.New(0, s.rootSecret), nil

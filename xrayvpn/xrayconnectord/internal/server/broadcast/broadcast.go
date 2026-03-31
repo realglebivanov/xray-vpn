@@ -28,6 +28,14 @@ func (s *Broadcast) Remove(c *wsconn.WSConn) {
 	s.mu.Unlock()
 }
 
+func (s *Broadcast) Close() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for c := range s.subs {
+		c.Close()
+	}
+}
+
 func (s *Broadcast) Broadcast(row *view.Row, sender *wsconn.WSConn) {
 	msg := struct {
 		Type string    `json:"type"`
