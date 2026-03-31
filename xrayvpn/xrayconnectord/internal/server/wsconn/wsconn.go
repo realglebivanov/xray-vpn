@@ -1,6 +1,7 @@
 package wsconn
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -21,7 +22,7 @@ func Upgrade(w http.ResponseWriter, r *http.Request) (*WSConn, error) {
 
 	s, err := state.New(c)
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(err, c.Close())
 	}
 
 	return &WSConn{state: s}, nil

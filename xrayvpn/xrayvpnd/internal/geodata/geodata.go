@@ -61,7 +61,7 @@ func tryToDownload(f geodataFile) error {
 	if err := download(httpclient.Default, f); err != nil {
 		slog.Warn("download geodata failed", "url", f.url, "err", err)
 		if err := download(httpclient.Direct, f); err != nil {
-			return fmt.Errorf("download geodata %s: %v", f.url, err)
+			return fmt.Errorf("download geodata %s: %w", f.url, err)
 		}
 	}
 

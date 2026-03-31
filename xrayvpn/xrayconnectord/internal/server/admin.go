@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -33,7 +34,7 @@ func (s *Server) handleAdminWS(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		evt, err := wsc.ReadEvent()
-		if err == state.ConnClosed {
+		if errors.Is(err, state.ConnClosed) {
 			slog.Info("ws conn closed")
 			break
 		}
@@ -98,9 +99,13 @@ func (s *Server) handleAdminPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := view.AdminTmpl.Execute(w, s.view.BuildHTMLContext()); err != nil {
+	var buf bytes.Buffer
+	if err := view.AdminTmpl.Execute(&buf, s.view.BuildHTMLContext()); err != nil {
 		slog.Error("execute admin tpl", "err", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
 	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	buf.WriteTo(w)
 }

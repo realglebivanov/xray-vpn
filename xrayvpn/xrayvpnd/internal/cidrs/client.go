@@ -35,7 +35,7 @@ func tryToFetchSource(src *source) ([]string, error) {
 		slog.Warn("fetch source with default client failed", "src", src.Name, "err", err)
 		cidrs, err := fetchSource(httpclient.Direct, src)
 		if err != nil {
-			return nil, fmt.Errorf("fetch source with direct client %s: %v", src.Name, err)
+			return nil, fmt.Errorf("fetch source with direct client %s: %w", src.Name, err)
 		}
 		return cidrs, nil
 	}

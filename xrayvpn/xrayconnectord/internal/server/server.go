@@ -53,6 +53,7 @@ func New(rootSecret []byte) (*Server, error) {
 				Domain:   hstdlib.MustEnv("PROXY_DOMAIN"),
 				MaxAge:   int(time.Hour.Seconds()),
 				Secure:   true,
+				Path:     "/",
 			},
 			adminUser:         hstdlib.MustEnv("ADMIN_USER"),
 			adminPasswordHash: hstdlib.MustEnv("ADMIN_PASSWORD_HASH"),

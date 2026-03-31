@@ -100,7 +100,7 @@ func EnvOrUint32(key string, fallback uint32) uint32 {
 	if v == "" {
 		return fallback
 	}
-	n, err := strconv.ParseUint(v, 10, 32)
+	n, err := strconv.ParseUint(v, 0, 32)
 	if err != nil {
 		return fallback
 	}
