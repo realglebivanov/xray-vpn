@@ -12,23 +12,23 @@ def _xray_version_from_gomod():
 xray_version = _xray_version_from_gomod()
 
 xray_xhttpserver_addr = "5.252.21.248"
-xray_server_addr = "80.71.157.96"
-xray_proxy_addr = "158.160.19.75"
+xray_server_addr = "81.19.141.114"
+xray_proxy_addr = "51.250.19.250"
 
 reality_pbk = "-wQcqdK1CZB9rcW3zeM3W2qx5lDENo9g3YN-jSU-LWI"
-reality_sni = "yandex.ru"
+reality_sni = "dzen.ru"
 reality_sid = "e2174ad2204ca5c5"
 
 proxy_domain = "x.hstd.space"
-xhttp_source_domain = "cdn.hstd.space"
+xhttp_source_domain = "dub.hstd.space"
 xhttp_cdn_domain = "pub.cdn.hstd.space"
-xhttp_path = "/images/625385d043bfac1b"
+xhttp_path = "/users/abb7bbacc305c706fa7e"
 
 letsencrypt_email = "realglebivanov@gmail.com"
 
 routing_rules = [
     {"type": "field", "outboundTag": "proxy", "domain": ["domain:yonote.ru", "domain:hstd.space"]},
-    {"type": "field", "outboundTag": "direct", "ip": ["geoip:ru", "geoip:private", "cidr:ru"]},
-    {"type": "field", "outboundTag": "direct", "domain": ["geosite:category-ru", "geosite:category-gov-ru"]},
+    {"type": "field", "outboundTag": "direct", "ip": ["geoip:ru", "geoip:private", "cidr:ru", "cidr:steam"]},
+    {"type": "field", "outboundTag": "direct", "domain": ["domain:tag.magnit.ru", "domain:magnit.ru", "geosite:category-ru", "geosite:category-gov-ru"]},
     {"type": "field", "outboundTag": "proxy", "network": "tcp,udp"},
 ]

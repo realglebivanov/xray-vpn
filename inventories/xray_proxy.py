@@ -28,11 +28,11 @@ hosts = [
                     "realitySni": xray.reality_sni,
                     "realitySid": xray.reality_sid,
                 },
-                {
-                    "remark": "Обход белых списков(xhttp, tls)",
-                    "host": xray.xhttp_cdn_domain,
-                    "xhttpPath": xray.xhttp_path,
-                },
+                # {
+                #     "remark": "Обход белых списков(xhttp, tls)",
+                #     "host": xray.xhttp_cdn_domain,
+                #     "xhttpPath": xray.xhttp_path,
+                # },
             ],
             "routingRules": xray.routing_rules,
         },
