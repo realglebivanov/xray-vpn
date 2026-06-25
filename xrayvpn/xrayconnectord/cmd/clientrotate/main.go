@@ -9,6 +9,7 @@ import (
 
 	"github.com/realglebivanov/hstd/hstdlib"
 	"github.com/realglebivanov/hstd/hstdlib/dataloader/cidrs"
+	"github.com/realglebivanov/hstd/hstdlib/dataloader/steam"
 	"github.com/realglebivanov/hstd/hstdlib/secret"
 	"github.com/realglebivanov/hstd/hstdlib/xrayconf"
 )
@@ -74,9 +75,17 @@ func loadRoutingRules() ([]xrayconf.RouteRule, error) {
 	}
 	slog.Info("fetched RU CIDRs", "count", len(ruCIDRs))
 
+	steamCIDRs, err := steam.Fetch()
+	if err != nil {
+		slog.Warn("fetch Steam CIDRs, skipping direct Steam routing", "err", err)
+	}
+
 	inverted := xrayconf.InvertRules(cfg.RoutingRules)
 
-	return xrayconf.ExpandRules(inverted, ruCIDRs), nil
+	return xrayconf.ExpandRules(inverted, map[string][]string{
+		xrayconf.TokenRUCIDR:    ruCIDRs,
+		xrayconf.TokenSteamCIDR: steamCIDRs,
+	}), nil
 }
 
 func rotate(uuids []string, flow string, rules []xrayconf.RouteRule) error {

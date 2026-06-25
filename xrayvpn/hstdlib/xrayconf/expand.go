@@ -23,26 +23,30 @@ func InvertRules(rules []RouteRule) []RouteRule {
 	return out
 }
 
-func ExpandRules(rules []RouteRule, ruCIDRs []string) []RouteRule {
-	if len(ruCIDRs) == 0 {
-		return rules
-	}
+const (
+	TokenRUCIDR    = "cidr:ru"
+	TokenSteamCIDR = "cidr:steam"
+)
 
-	out := make([]RouteRule, len(rules))
-	for i, r := range rules {
-		out[i] = r
+func ExpandRules(rules []RouteRule, cidrsByToken map[string][]string) []RouteRule {
+	out := make([]RouteRule, 0, len(rules))
+	for _, r := range rules {
 		if len(r.IP) > 0 {
-			out[i].IP = expandIPs(r.IP, ruCIDRs)
+			r.IP = expandIPs(r.IP, cidrsByToken)
+			if len(r.IP) == 0 {
+				continue
+			}
 		}
+		out = append(out, r)
 	}
 	return out
 }
 
-func expandIPs(ips []string, ruCIDRs []string) []string {
-	var out []string
+func expandIPs(ips []string, cidrsByToken map[string][]string) []string {
+	out := make([]string, 0, len(ips))
 	for _, ip := range ips {
-		if ip == "cidr:ru" {
-			out = append(out, ruCIDRs...)
+		if cidrs, ok := cidrsByToken[ip]; ok {
+			out = append(out, cidrs...)
 		} else {
 			out = append(out, ip)
 		}

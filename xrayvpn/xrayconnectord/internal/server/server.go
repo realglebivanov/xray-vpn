@@ -16,6 +16,7 @@ import (
 	"github.com/realglebivanov/hstd/hstdlib/xrayconf"
 	"github.com/realglebivanov/hstd/xrayconnectord/internal/cidrs"
 	"github.com/realglebivanov/hstd/xrayconnectord/internal/client"
+	"github.com/realglebivanov/hstd/xrayconnectord/internal/steam"
 	"github.com/realglebivanov/hstd/xrayconnectord/internal/db"
 	"github.com/realglebivanov/hstd/xrayconnectord/internal/server/admin/view"
 	"github.com/realglebivanov/hstd/xrayconnectord/internal/server/broadcast"
@@ -39,6 +40,7 @@ type Server struct {
 	routingRules  []xrayconf.RouteRule
 	httpServer    *http.Server
 	cidrs         *cidrs.CIDRs
+	steam         *steam.Steam
 }
 
 const configPath = "/etc/subsrv/config.json"
@@ -68,6 +70,7 @@ func New(rootSecret []byte) (*Server, error) {
 		rootSecret:    rootSecret,
 		routingRules:  cfg.RoutingRules,
 		cidrs:         cidrs.New(),
+		steam:         steam.New(),
 		legacySubPath: hstdlib.MustEnv("SUB_PATH"),
 		broadcast:     broadcast.New(),
 		auth: &auth{
@@ -93,6 +96,7 @@ func New(rootSecret []byte) (*Server, error) {
 
 func (s *Server) Start() error {
 	s.cidrs.StartRefresh(2 * time.Hour)
+	s.steam.StartRefresh(2 * time.Hour)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /admin/ws", s.handleAdminWS)
@@ -117,6 +121,7 @@ func (s *Server) Start() error {
 
 func (s *Server) Stop() {
 	s.cidrs.Stop()
+	s.steam.Stop()
 	s.broadcast.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

@@ -48,7 +48,10 @@ func (s *Server) handleSubReq(w http.ResponseWriter, r *http.Request) {
 	}
 
 	uuid := secret.GenerateClientUUID(l.Index, s.rootSecret)
-	rules := xrayconf.ExpandRules(s.routingRules, s.cidrs.Get())
+	rules := xrayconf.ExpandRules(s.routingRules, map[string][]string{
+		xrayconf.TokenRUCIDR:    s.cidrs.Get(),
+		xrayconf.TokenSteamCIDR: s.steam.Get(),
+	})
 	configs := client.BuildConfigs(uuid, s.serverConfigs, rules)
 
 	var buf bytes.Buffer
